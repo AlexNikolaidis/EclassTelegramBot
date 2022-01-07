@@ -6,14 +6,15 @@ from selenium.webdriver.common.by import By
 import time
 from bs4 import BeautifulSoup
 from datetime import datetime
+from datetime import date
 
-TELEGRAM_BOT_TOKEN = '####'
-TELEGRAM_CHAT_ID = '#####'
+TELEGRAM_BOT_TOKEN = '#'
+TELEGRAM_CHAT_ID = '#'
 ***REMOVED***
-URL = '####'
-USR = '####'
-PASS = '####'
-PATH_TO_DRIVER = '####'
+URL = '#'
+USR = '#'
+PASS = '#'
+PATH_TO_DRIVER = '#'
 
 months = {
     "Ιανουαρίου": 1,
@@ -30,6 +31,7 @@ months = {
     "Δεκεμβρίου": 12,
 }
 chars = [['(', '\('], [')', '\)'], ['-', '\-'], ['.', '\.'], ['!', '\!']]
+# filtered = ['ΣΧΕΔΙΑΣΜΟΣ ΔΙΑΔΙΚΤΥΑΚΩΝ ΠΡΩΤΟΚΟΛΛΩΝ']
 
 
 class Announcement:
@@ -70,38 +72,60 @@ def get(url, usr, password, path_to_driver):
         tmp.body = div_tmp['title'].rstrip("\n")
         date = div.parent.parent.find_all('td')[1]
         tmp.date = date.string
+        for x in chars:
+            tmp.title = tmp.title.replace(x[0], x[1])
+            tmp.course = tmp.course.replace(x[0], x[1])
+            tmp.body = tmp.body.replace(x[0], x[1])
+            tmp.date = tmp.date.replace(x[0], x[1])
         _list.append(tmp)
 
     return _list
 
 
-def send(_list, token, chat_id, param, course_filter):
-    # param gives different options for choosing which announcements to send via telegram
+def send(_list, token, chat_id, param1, param2, course_filter):
+    # param1 gives different options for choosing which announcements to send via telegram
+    # 0 -> sends everything it finds
     # 1 -> sends only the ones released today
+    # 2 -> sends only the ones released X days before where X is param2 (if not used set param2 to 0)
+    #
+    # course_filter takes the course name exactly as it appears in eclass
+    # and only sends announcements for this course/courses
     #
     now = datetime.now()
+    year = now.strftime("%Y")
     month = now.strftime("%m")
     day = now.strftime("%d")
+    d0 = date(int(year), int(month), int(day))
 
     for each in _list:
-        check_date = each.date.split(" ")
-        # if param == 1 and course_filter == 0 and month == months[check_date[2]] and day == check_date[1]:
-        if True:
-            for x in chars:
-                each.title = each.title.replace(x[0], x[1])
-                each.course = each.course.replace(x[0], x[1])
-                each.body = each.body.replace(x[0], x[1])
-                each.date = each.date.replace(x[0], x[1])
-                print(each.course)
-            bot = telegram.Bot(token=token)
-            bot.send_message(chat_id=chat_id, parse_mode='MarkdownV2',
-                             text=f'__*Τίτλος*__:\n{each.title} \n\n__*Μάθημα*__:\n{each.course} \n\n'
-                                  f'__*Ανακοίνωση*__: \n{each.body}\n\n__*Ημερομηνία*__:\n{each.date}\n\n')
+        if any(each.course in s for s in course_filter):
+            if param1 == 0:
+                bot = telegram.Bot(token=token)
+                bot.send_message(chat_id=chat_id, parse_mode='MarkdownV2',
+                                 text=f'__*Τίτλος*__:\n{each.title} \n\n__*Μάθημα*__:\n{each.course} \n\n'
+                                      f'__*Ανακοίνωση*__: \n{each.body}\n\n__*Ημερομηνία*__:\n{each.date}\n\n')
+            elif param1 == 1:
+                check_date = each.date.split(" ")
+                if month == months[check_date[2]] and day == check_date[1]:
+                    bot = telegram.Bot(token=token)
+                    bot.send_message(chat_id=chat_id, parse_mode='MarkdownV2',
+                                     text=f'__*Τίτλος*__:\n{each.title} \n\n__*Μάθημα*__:\n{each.course} \n\n'
+                                          f'__*Ανακοίνωση*__: \n{each.body}\n\n__*Ημερομηνία*__:\n{each.date}\n\n')
+            elif param1 == 2:
+                check_date = each.date.split(" ")
+                d1 = date(int(check_date[3]), int(months[check_date[2]]), int(check_date[1]))
+                # delta is how old is the announc. in days
+                delta = (d0 - d1).days
+                if delta <= param2:
+                    bot = telegram.Bot(token=token)
+                    bot.send_message(chat_id=chat_id, parse_mode='MarkdownV2',
+                                     text=f'__*Τίτλος*__:\n{each.title} \n\n__*Μάθημα*__:\n{each.course} \n\n'
+                                          f'__*Ανακοίνωση*__: \n{each.body}\n\n__*Ημερομηνία*__:\n{each.date}\n\n')
 
 
 def main():
     recv = get(URL, USR, PASS, PATH_TO_DRIVER)
-    send(recv, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, 1, 0)
+    send(recv, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, 2, 20, filtered)
 
     # bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
     # temp = bot.get_updates()
