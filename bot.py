@@ -7,13 +7,13 @@ import time
 from bs4 import BeautifulSoup
 from datetime import datetime
 
-TELEGRAM_BOT_TOKEN = 'TOKEN'
-TELEGRAM_CHAT_ID = 'CHAT ID'
-URL = 'ECLASS WEBSITE'
-USR = 'USERNAME'
-PASS = 'PASSWORD'
-PATH_TO_DRIVER = 'PATH FOR BROWSER DRIVER'
-
+TELEGRAM_BOT_TOKEN = '####'
+TELEGRAM_CHAT_ID = '#####'
+***REMOVED***
+URL = '####'
+USR = '####'
+PASS = '####'
+PATH_TO_DRIVER = '####'
 
 months = {
     "Ιανουαρίου": 1,
@@ -29,6 +29,7 @@ months = {
     "Νοεμβρίου": 11,
     "Δεκεμβρίου": 12,
 }
+chars = [['(', '\('], [')', '\)'], ['-', '\-'], ['.', '\.'], ['!', '\!']]
 
 
 class Announcement:
@@ -39,56 +40,74 @@ class Announcement:
         self.date = "NOT_SET"
 
 
-options = webdriver.ChromeOptions()
-options.add_argument('--ignore-certificate-errors')
-# options.add_argument('--incognito')
-options.add_argument('--headless')
-s = Service(PATH_TO_DRIVER)
-driver = webdriver.Chrome(service=s, options=options)
-driver.get(URL)
-temp = driver.find_element(By.ID, 'uname')
-temp.send_keys(USR)
-temp = driver.find_element(By.ID, 'pass')
-temp.send_keys(PASS)
-temp.send_keys(Keys.RETURN)
-time.sleep(0.2)
-temp = driver.find_element(By.CLASS_NAME, 'panel')
-button = temp.find_element(By.XPATH, '//a[@href="../modules/announcements/myannouncements.php"]')
-button.click()
-time.sleep(0.5)
-# temp = driver.find_element(By.CLASS_NAME, 'tablelist')
-soup = BeautifulSoup(driver.page_source, 'html.parser')
-# print(soup.find_all(["ul"]))
+def get(url, usr, password, path_to_driver):
+    options = webdriver.ChromeOptions()
+    options.add_argument('--ignore-certificate-errors')
+    # options.add_argument('--incognito')
+    options.add_argument('--headless')
+    s = Service(path_to_driver)
+    driver = webdriver.Chrome(service=s, options=options)
+    driver.get(url)
+    temp = driver.find_element(By.ID, 'uname')
+    temp.send_keys(usr)
+    temp = driver.find_element(By.ID, 'pass')
+    temp.send_keys(password)
+    temp.send_keys(Keys.RETURN)
+    time.sleep(0.2)
+    temp = driver.find_element(By.CLASS_NAME, 'panel')
+    button = temp.find_element(By.XPATH, '//a[@href="../modules/announcements/myannouncements.php"]')
+    button.click()
+    time.sleep(0.5)
+    soup = BeautifulSoup(driver.page_source, 'html.parser')
+    driver.quit()
+    temp = soup.find_all("div", class_='table_td')
+    _list = []
+    for div in temp:
+        tmp = Announcement()
+        tmp.title = div.div.a.string
+        tmp.course = div.small.string
+        div_tmp = div.find("div", class_="table_td_body")
+        tmp.body = div_tmp['title'].rstrip("\n")
+        date = div.parent.parent.find_all('td')[1]
+        tmp.date = date.string
+        _list.append(tmp)
 
-temp = soup.find_all("div", class_='table_td')
+    return _list
 
-anakoinoseis = []
-for div in temp:
-    tmp = Announcement()
-    tmp.title = div.div.a.string
-    tmp.course = div.small.string
-    div_tmp = div.find("div", class_="table_td_body")
-    tmp.body = div_tmp['title'].rstrip("\n")
-    date = div.parent.parent.find_all('td')[1]
-    tmp.date = date.string
-    anakoinoseis.append((tmp))
-    # print(f'\ntitlos: {tmp.title}')
-    # print(f'mathima: {tmp.course}')
-    # print(f'anakoinosi: {tmp.body}')
-    # print(f'date: {tmp.date}')
 
-now = datetime.now()
-month = now.strftime("%m")
-day = now.strftime("%d")
+def send(_list, token, chat_id, param, course_filter):
+    # param gives different options for choosing which announcements to send via telegram
+    # 1 -> sends only the ones released today
+    #
+    now = datetime.now()
+    month = now.strftime("%m")
+    day = now.strftime("%d")
 
-for each in anakoinoseis:
-    check_date = each.date.split(" ")
-    if month == months[check_date[2]] and day == check_date[1]:
-    # if True:
-        bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
-        bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=f'ΤΙΤΛΟΣ: {each.title}\nΜΑΘΗΜΑ: {each.course}\n'
-                                                  f'ΑΝΑΚΟΙΝΩΣΗ: {each.body}\n'f'ΗΜΕΡΟΜΗΝΙΑ: {each.date}\n')
+    for each in _list:
+        check_date = each.date.split(" ")
+        # if param == 1 and course_filter == 0 and month == months[check_date[2]] and day == check_date[1]:
+        if True:
+            for x in chars:
+                each.title = each.title.replace(x[0], x[1])
+                each.course = each.course.replace(x[0], x[1])
+                each.body = each.body.replace(x[0], x[1])
+                each.date = each.date.replace(x[0], x[1])
+                print(each.course)
+            bot = telegram.Bot(token=token)
+            bot.send_message(chat_id=chat_id, parse_mode='MarkdownV2',
+                             text=f'__*Τίτλος*__:\n{each.title} \n\n__*Μάθημα*__:\n{each.course} \n\n'
+                                  f'__*Ανακοίνωση*__: \n{each.body}\n\n__*Ημερομηνία*__:\n{each.date}\n\n')
 
-print("day:", day)
-# time.sleep(5)
-driver.quit()
+
+def main():
+    recv = get(URL, USR, PASS, PATH_TO_DRIVER)
+    send(recv, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, 1, 0)
+
+    # bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
+    # temp = bot.get_updates()
+    # for i in temp:
+    #     print(i)
+
+
+if __name__ == "__main__":
+    main()
