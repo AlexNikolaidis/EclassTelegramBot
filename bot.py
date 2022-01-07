@@ -70,8 +70,8 @@ def get(url, usr, password, path_to_driver):
         tmp.course = div.small.string
         div_tmp = div.find("div", class_="table_td_body")
         tmp.body = div_tmp['title'].rstrip("\n")
-        date = div.parent.parent.find_all('td')[1]
-        tmp.date = date.string
+        temp_date = div.parent.parent.find_all('td')[1]
+        tmp.date = temp_date.string
         for x in chars:
             tmp.title = tmp.title.replace(x[0], x[1])
             tmp.course = tmp.course.replace(x[0], x[1])
