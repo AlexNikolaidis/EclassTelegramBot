@@ -1,4 +1,5 @@
 import telegram
+import pickle
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.service import Service
@@ -7,14 +8,15 @@ import time
 from bs4 import BeautifulSoup
 from datetime import datetime
 from datetime import date
+import numpy as np
 
-TELEGRAM_BOT_TOKEN = '#'
-TELEGRAM_CHAT_ID = '#'
-***REMOVED***
-URL = '#'
-USR = '#'
-PASS = '#'
-PATH_TO_DRIVER = '#'
+# TELEGRAM_BOT_TOKEN = '#'
+# TELEGRAM_CHAT_ID = '#'
+# ***REMOVED***
+# URL = '#'
+# USR = '#'
+# PASS = '#'
+# PATH_TO_DRIVER = '#'
 
 months = {
     "Ιανουαρίου": 1,
@@ -31,7 +33,7 @@ months = {
     "Δεκεμβρίου": 12,
 }
 chars = [['(', '\('], [')', '\)'], ['-', '\-'], ['.', '\.'], ['!', '\!']]
-# filtered = ['ΣΧΕΔΙΑΣΜΟΣ ΔΙΑΔΙΚΤΥΑΚΩΝ ΠΡΩΤΟΚΟΛΛΩΝ']
+
 
 
 class Announcement:
@@ -40,6 +42,15 @@ class Announcement:
         self.body = "NOT_SET"
         self.course = "NOT_SET"
         self.date = "NOT_SET"
+
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
+
+    def print(self):
+        print(f'Title:\n{self.title}')
+        print(f'Course:\n{self.course}')
+        print(f'Body:\n{self.body}')
+        print(f'Date:\n{self.date}')
 
 
 def get(url, usr, password, path_to_driver):
@@ -97,7 +108,11 @@ def send(_list, token, chat_id, param1, param2, course_filter):
     day = now.strftime("%d")
     d0 = date(int(year), int(month), int(day))
 
+    if course_filter == 0:
+        course_filter = []
+
     for each in _list:
+        course_filter.append(each.course)
         if any(each.course in s for s in course_filter):
             if param1 == 0:
                 bot = telegram.Bot(token=token)
@@ -123,14 +138,29 @@ def send(_list, token, chat_id, param1, param2, course_filter):
                                           f'__*Ανακοίνωση*__: \n{each.body}\n\n__*Ημερομηνία*__:\n{each.date}\n\n')
 
 
+def send_single(announc, token, chat_id):
+    bot = telegram.Bot(token=token)
+    bot.send_message(chat_id=chat_id, parse_mode='MarkdownV2',
+                     text=f'__*Τίτλος*__:\n{announc.title} \n\n__*Μάθημα*__:\n{announc.course} \n\n'
+                          f'__*Ανακοίνωση*__: \n{announc.body}\n\n__*Ημερομηνία*__:\n{announc.date}\n\n')
+
+
 def main():
     recv = get(URL, USR, PASS, PATH_TO_DRIVER)
-    send(recv, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, 2, 20, filtered)
-
-    # bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
-    # temp = bot.get_updates()
-    # for i in temp:
-    #     print(i)
+    try:
+        file = open('announc_history', 'rb')
+        history = pickle.load(file)
+        file.close()
+        for each in reversed(recv):
+            if each not in history:
+                send_single(each, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID)
+                history.insert(0, each)
+        with open('announc_history', 'wb') as file:
+            pickle.dump(recv, file)
+    except FileNotFoundError:
+        send(recv, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, 0, 0, 0)
+        with open('announc_history', 'wb') as history_pickle:
+            pickle.dump(recv, history_pickle)
 
 
 if __name__ == "__main__":
