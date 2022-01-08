@@ -8,7 +8,6 @@ import time
 from bs4 import BeautifulSoup
 from datetime import datetime
 from datetime import date
-import numpy as np
 
 TELEGRAM_BOT_TOKEN = '#'
 TELEGRAM_CHAT_ID = '#'
