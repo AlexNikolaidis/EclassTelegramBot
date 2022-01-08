@@ -10,13 +10,13 @@ from datetime import datetime
 from datetime import date
 import numpy as np
 
-# TELEGRAM_BOT_TOKEN = '#'
-# TELEGRAM_CHAT_ID = '#'
-# ***REMOVED***
-# URL = '#'
-# USR = '#'
-# PASS = '#'
-# PATH_TO_DRIVER = '#'
+TELEGRAM_BOT_TOKEN = '#'
+TELEGRAM_CHAT_ID = '#'
+***REMOVED***
+URL = '#'
+USR = '#'
+PASS = '#'
+PATH_TO_DRIVER = '#'
 
 months = {
     "Ιανουαρίου": 1,
