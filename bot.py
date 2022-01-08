@@ -35,7 +35,6 @@ months = {
 chars = [['(', '\('], [')', '\)'], ['-', '\-'], ['.', '\.'], ['!', '\!']]
 
 
-
 class Announcement:
     def __init__(self):
         self.title = "NOT_SET"
@@ -151,12 +150,21 @@ def main():
         file = open('announc_history', 'rb')
         history = pickle.load(file)
         file.close()
+        sent = 0
         for each in reversed(recv):
             if each not in history:
                 send_single(each, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID)
+                sent += 1
                 history.insert(0, each)
         with open('announc_history', 'wb') as file:
             pickle.dump(recv, file)
+        now = datetime.now()
+        hour = now.strftime("%H")
+        minute = now.strftime("%M")
+        if sent == 0 and int(hour) == 12 and 25 <= int(minute) <= 35:
+            bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
+            bot.send_message(disable_notification=True, chat_id=TELEGRAM_CHAT_ID, parse_mode='MarkdownV2',
+                             text='*Καμία νέα ανακοίνωση* \U0001F4A9')
     except FileNotFoundError:
         send(recv, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, 0, 0, 0)
         with open('announc_history', 'wb') as history_pickle:
