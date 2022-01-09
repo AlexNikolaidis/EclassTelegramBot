@@ -2,7 +2,7 @@
 
 Designed to run on a Raspberry Pi Zero 2 W
 
-Scheduled to run every 6 minutes (through crontab)
+Scheduled to run every 6 minutes from 8am to 11pm (through crontab)
 
 Cronitor.io integration so it can be monitored more easily
 
