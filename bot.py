@@ -1,3 +1,10 @@
+#
+# Script coded to read new announcements from eclass and send them via a telegram bot.
+# It is designed to run on a Raspberry Pi Zero 2 W
+# Scheduled to run every 6 minutes (through crontab)
+# Added cronitor.io job so it can be monitored more easily
+#
+#
 import telegram
 import pickle
 from selenium import webdriver
@@ -8,7 +15,10 @@ import time
 from bs4 import BeautifulSoup
 from datetime import datetime
 from datetime import date
+import cronitor
 
+
+cronitor.api_key = '#'
 TELEGRAM_BOT_TOKEN = '#'
 TELEGRAM_CHAT_ID = '#'
 ***REMOVED***
@@ -51,6 +61,14 @@ class Announcement:
         print(f'Date:\n{self.date}')
 
 
+monitor = cronitor.Monitor('EclassTelegramBot')
+cronitor.Monitor.put(
+    key='EclassTelegramBot',
+    type='job',
+    schedule='*/6 8-23 * * *',
+)
+
+
 def get(url, usr, password, path_to_driver):
     options = webdriver.ChromeOptions()
     options.add_argument('--ignore-certificate-errors')
@@ -87,7 +105,6 @@ def get(url, usr, password, path_to_driver):
             tmp.body = tmp.body.replace(x[0], x[1])
             tmp.date = tmp.date.replace(x[0], x[1])
         _list.append(tmp)
-
     return _list
 
 
@@ -144,6 +161,7 @@ def send_single(announc, token, chat_id):
 
 
 def main():
+    monitor.ping(state='run')
     recv = get(URL, USR, PASS, PATH_TO_DRIVER)
     try:
         file = open('announc_history', 'rb')
@@ -157,17 +175,28 @@ def main():
                 history.insert(0, each)
         with open('announc_history', 'wb') as file:
             pickle.dump(recv, file)
-        now = datetime.now()
-        hour = now.strftime("%H")
-        minute = now.strftime("%M")
-        if sent == 0 and int(hour) == 12 and 25 <= int(minute) <= 35:
-            bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
-            bot.send_message(disable_notification=True, chat_id=TELEGRAM_CHAT_ID, parse_mode='MarkdownV2',
-                             text='*Καμία νέα ανακοίνωση* \U0001F4A9')
+        ##############################################
+        # if you do not want to use cronitor but still want to have a reliable way to know that it's running correctly
+        # you can uncomment the next lines so it sends one "alive" signal everyday
+        #
+        # now = datetime.now()
+        # hour = now.strftime("%H")
+        # minute = now.strftime("%M")
+        # if int(hour) == 12 and 25 <= int(minute) <= 35:
+        #     bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
+        #     bot.send_message(disable_notification=True, chat_id=TELEGRAM_CHAT_ID, parse_mode='MarkdownV2',
+        #     text=f'[{hour}:{minute}] __*Still alive & running*__ \U0001F4A9')
+        ##############################################
+        if sent != 0:
+            msg = f'Sent {sent} new announcements'
+            monitor.ping(state='complete', message=msg)
+        else:
+            monitor.ping(state='complete')
     except FileNotFoundError:
         send(recv, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, 0, 0, 0)
         with open('announc_history', 'wb') as history_pickle:
             pickle.dump(recv, history_pickle)
+        monitor.ping(state='complete')
 
 
 if __name__ == "__main__":
