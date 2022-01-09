@@ -1,4 +1,4 @@
-# Script coded to read new announcements from eclass and send them via a telegram bot.
+# Get new announcements from eclass as a message via a telegram bot.
 
 It is designed to run on a Raspberry Pi Zero 2 W
 
