@@ -1,10 +1,10 @@
 # Get new announcements from eclass as a message via a telegram bot.
 
-It is designed to run on a Raspberry Pi Zero 2 W
+Designed to run on a Raspberry Pi Zero 2 W
 
 Scheduled to run every 6 minutes (through crontab)
 
-Added cronitor.io job so it can be monitored more easily
+Cronitor.io integration so it can be monitored more easily
 
 Connects to eclass (University of Thessaly), gets new announcements and sends them via a telegram bot to you.
 
