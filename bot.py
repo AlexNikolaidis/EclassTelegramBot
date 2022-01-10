@@ -27,8 +27,7 @@ load_dotenv(find_dotenv())
 cronitor.api_key = os.getenv('CRONITOR_API_KEY')
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
-***REMOVED***
-***REMOVED***
+URL = os.getenv('URL')
 USR = os.getenv('USR')
 PASS = os.getenv('PASS')
 PATH_TO_DRIVER = os.getenv('PATH_TO_DRIVER')
