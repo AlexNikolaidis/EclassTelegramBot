@@ -6,6 +6,7 @@
 #
 #
 import telegram
+import requests
 import pickle
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
@@ -18,14 +19,14 @@ from datetime import date
 import cronitor
 
 
-cronitor.api_key = '#'
-TELEGRAM_BOT_TOKEN = '#'
-TELEGRAM_CHAT_ID = '#'
 ***REMOVED***
-URL = '#'
-USR = '#'
-PASS = '#'
-PATH_TO_DRIVER = '#'
+***REMOVED***
+***REMOVED***
+***REMOVED***
+***REMOVED***
+***REMOVED***
+***REMOVED***
+***REMOVED***
 
 months = {
     "Ιανουαρίου": 1,
@@ -88,7 +89,6 @@ def get(url, usr, password, path_to_driver):
     button.click()
     time.sleep(0.5)
     soup = BeautifulSoup(driver.page_source, 'html.parser')
-    driver.quit()
     temp = soup.find_all("div", class_='table_td')
     _list = []
     for div in temp:
@@ -96,7 +96,10 @@ def get(url, usr, password, path_to_driver):
         tmp.title = div.div.a.string
         tmp.course = div.small.string
         div_tmp = div.find("div", class_="table_td_body")
-        tmp.body = div_tmp['title'].rstrip("\n")
+        try:
+            tmp.body = div_tmp['title'].rstrip("\n")
+        except:
+            tmp.body = div_tmp.p.string.rstrip("\n")
         temp_date = div.parent.parent.find_all('td')[1]
         tmp.date = temp_date.string
         for x in chars:
@@ -200,4 +203,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except:
+        monitor.ping(state='fail')
