@@ -5,6 +5,8 @@
 # Added cronitor.io job so it can be monitored more easily
 #
 #
+import os
+
 import telegram
 import requests
 import pickle
@@ -17,16 +19,18 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 from datetime import date
 import cronitor
+from dotenv import load_dotenv, find_dotenv
 
+load_dotenv(find_dotenv())
 
+cronitor.api_key = os.getenv('CRONITOR_API_KEY')
+TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
+TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 ***REMOVED***
 ***REMOVED***
-***REMOVED***
-***REMOVED***
-***REMOVED***
-***REMOVED***
-***REMOVED***
-***REMOVED***
+USR = os.getenv('USR')
+PASS = os.getenv('PASS')
+PATH_TO_DRIVER = os.getenv('PATH_TO_DRIVER')
 
 months = {
     "Ιανουαρίου": 1,
@@ -73,7 +77,6 @@ cronitor.Monitor.put(
 def get(url, usr, password, path_to_driver):
     options = webdriver.ChromeOptions()
     options.add_argument('--ignore-certificate-errors')
-    # options.add_argument('--incognito')
     options.add_argument('--headless')
     s = Service(path_to_driver)
     driver = webdriver.Chrome(service=s, options=options)
