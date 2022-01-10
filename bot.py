@@ -21,6 +21,7 @@ from datetime import date
 import cronitor
 from dotenv import load_dotenv, find_dotenv
 
+
 load_dotenv(find_dotenv())
 
 cronitor.api_key = os.getenv('CRONITOR_API_KEY')
