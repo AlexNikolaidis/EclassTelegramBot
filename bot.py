@@ -6,8 +6,6 @@
 #
 #
 import os
-
-import telegram
 import requests
 import pickle
 from selenium import webdriver
@@ -136,34 +134,29 @@ def send(_list, token, chat_id, param1, param2, course_filter):
         course_filter.append(each.course)
         if any(each.course in s for s in course_filter):
             if param1 == 0:
-                bot = telegram.Bot(token=token)
-                bot.send_message(chat_id=chat_id, parse_mode='MarkdownV2',
-                                 text=f'__*Τίτλος*__:\n{each.title} \n\n__*Μάθημα*__:\n{each.course} \n\n'
-                                      f'__*Ανακοίνωση*__: \n{each.body}\n\n__*Ημερομηνία*__:\n{each.date}\n\n')
+                send_single(each, token, chat_id)
+                # bot = telegram.Bot(token=token)
+                # bot.send_message(chat_id=chat_id, parse_mode='MarkdownV2',
+                #                  text=f'__*Τίτλος*__:\n{each.title} \n\n__*Μάθημα*__:\n{each.course} \n\n'
+                #                       f'__*Ανακοίνωση*__: \n{each.body}\n\n__*Ημερομηνία*__:\n{each.date}\n\n')
             elif param1 == 1:
                 check_date = each.date.split(" ")
                 if month == months[check_date[2]] and day == check_date[1]:
-                    bot = telegram.Bot(token=token)
-                    bot.send_message(chat_id=chat_id, parse_mode='MarkdownV2',
-                                     text=f'__*Τίτλος*__:\n{each.title} \n\n__*Μάθημα*__:\n{each.course} \n\n'
-                                          f'__*Ανακοίνωση*__: \n{each.body}\n\n__*Ημερομηνία*__:\n{each.date}\n\n')
+                    send_single(each, token, chat_id)
             elif param1 == 2:
                 check_date = each.date.split(" ")
                 d1 = date(int(check_date[3]), int(months[check_date[2]]), int(check_date[1]))
                 # delta is how old is the announc. in days
                 delta = (d0 - d1).days
                 if delta <= param2:
-                    bot = telegram.Bot(token=token)
-                    bot.send_message(chat_id=chat_id, parse_mode='MarkdownV2',
-                                     text=f'__*Τίτλος*__:\n{each.title} \n\n__*Μάθημα*__:\n{each.course} \n\n'
-                                          f'__*Ανακοίνωση*__: \n{each.body}\n\n__*Ημερομηνία*__:\n{each.date}\n\n')
+                    send_single(each, token, chat_id)
 
 
 def send_single(announc, token, chat_id):
-    bot = telegram.Bot(token=token)
-    bot.send_message(chat_id=chat_id, parse_mode='MarkdownV2',
-                     text=f'__*Τίτλος*__:\n{announc.title} \n\n__*Μάθημα*__:\n{announc.course} \n\n'
-                          f'__*Ανακοίνωση*__: \n{announc.body}\n\n__*Ημερομηνία*__:\n{announc.date}\n\n')
+    text = f'__*Τίτλος*__:\n{announc.title} \n\n__*Μάθημα*__:\n{announc.course} \n\n' \
+           f'__*Ανακοίνωση*__: \n{announc.body}\n\n__*Ημερομηνία*__:\n{announc.date}\n\n'
+    requests.post(url=f'https://api.telegram.org/bot{token}/'
+                      f'sendMessage?chat_id={chat_id}&text={text}&parse_mode=MarkdownV2')
 
 
 def main():
